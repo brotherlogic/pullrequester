@@ -6,6 +6,8 @@ package pullrequester
 import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
+	context "golang.org/x/net/context"
+	grpc "google.golang.org/grpc"
 	math "math"
 )
 
@@ -20,6 +22,128 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
+type PullRequest_Check_Pass int32
+
+const (
+	PullRequest_Check_UNKNOWN PullRequest_Check_Pass = 0
+	PullRequest_Check_FAIL    PullRequest_Check_Pass = 1
+	PullRequest_Check_PASS    PullRequest_Check_Pass = 2
+)
+
+var PullRequest_Check_Pass_name = map[int32]string{
+	0: "UNKNOWN",
+	1: "FAIL",
+	2: "PASS",
+}
+
+var PullRequest_Check_Pass_value = map[string]int32{
+	"UNKNOWN": 0,
+	"FAIL":    1,
+	"PASS":    2,
+}
+
+func (x PullRequest_Check_Pass) String() string {
+	return proto.EnumName(PullRequest_Check_Pass_name, int32(x))
+}
+
+func (PullRequest_Check_Pass) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_bebe1259dc1913b7, []int{0, 0, 0}
+}
+
+type PullRequest struct {
+	Url                  string   `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
+	NumberOfCommits      int32    `protobuf:"varint,2,opt,name=number_of_commits,json=numberOfCommits,proto3" json:"number_of_commits,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PullRequest) Reset()         { *m = PullRequest{} }
+func (m *PullRequest) String() string { return proto.CompactTextString(m) }
+func (*PullRequest) ProtoMessage()    {}
+func (*PullRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bebe1259dc1913b7, []int{0}
+}
+
+func (m *PullRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PullRequest.Unmarshal(m, b)
+}
+func (m *PullRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PullRequest.Marshal(b, m, deterministic)
+}
+func (m *PullRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PullRequest.Merge(m, src)
+}
+func (m *PullRequest) XXX_Size() int {
+	return xxx_messageInfo_PullRequest.Size(m)
+}
+func (m *PullRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PullRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PullRequest proto.InternalMessageInfo
+
+func (m *PullRequest) GetUrl() string {
+	if m != nil {
+		return m.Url
+	}
+	return ""
+}
+
+func (m *PullRequest) GetNumberOfCommits() int32 {
+	if m != nil {
+		return m.NumberOfCommits
+	}
+	return 0
+}
+
+type PullRequest_Check struct {
+	Source               string                 `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
+	Pass                 PullRequest_Check_Pass `protobuf:"varint,2,opt,name=pass,proto3,enum=pullrequester.PullRequest_Check_Pass" json:"pass,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}               `json:"-"`
+	XXX_unrecognized     []byte                 `json:"-"`
+	XXX_sizecache        int32                  `json:"-"`
+}
+
+func (m *PullRequest_Check) Reset()         { *m = PullRequest_Check{} }
+func (m *PullRequest_Check) String() string { return proto.CompactTextString(m) }
+func (*PullRequest_Check) ProtoMessage()    {}
+func (*PullRequest_Check) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bebe1259dc1913b7, []int{0, 0}
+}
+
+func (m *PullRequest_Check) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PullRequest_Check.Unmarshal(m, b)
+}
+func (m *PullRequest_Check) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PullRequest_Check.Marshal(b, m, deterministic)
+}
+func (m *PullRequest_Check) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PullRequest_Check.Merge(m, src)
+}
+func (m *PullRequest_Check) XXX_Size() int {
+	return xxx_messageInfo_PullRequest_Check.Size(m)
+}
+func (m *PullRequest_Check) XXX_DiscardUnknown() {
+	xxx_messageInfo_PullRequest_Check.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PullRequest_Check proto.InternalMessageInfo
+
+func (m *PullRequest_Check) GetSource() string {
+	if m != nil {
+		return m.Source
+	}
+	return ""
+}
+
+func (m *PullRequest_Check) GetPass() PullRequest_Check_Pass {
+	if m != nil {
+		return m.Pass
+	}
+	return PullRequest_Check_UNKNOWN
+}
+
 type Config struct {
 	LastRun              int64    `protobuf:"varint,1,opt,name=last_run,json=lastRun,proto3" json:"last_run,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -31,7 +155,7 @@ func (m *Config) Reset()         { *m = Config{} }
 func (m *Config) String() string { return proto.CompactTextString(m) }
 func (*Config) ProtoMessage()    {}
 func (*Config) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bebe1259dc1913b7, []int{0}
+	return fileDescriptor_bebe1259dc1913b7, []int{1}
 }
 
 func (m *Config) XXX_Unmarshal(b []byte) error {
@@ -59,18 +183,179 @@ func (m *Config) GetLastRun() int64 {
 	return 0
 }
 
+type UpdateRequest struct {
+	Update               *PullRequest `protobuf:"bytes,1,opt,name=update,proto3" json:"update,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *UpdateRequest) Reset()         { *m = UpdateRequest{} }
+func (m *UpdateRequest) String() string { return proto.CompactTextString(m) }
+func (*UpdateRequest) ProtoMessage()    {}
+func (*UpdateRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bebe1259dc1913b7, []int{2}
+}
+
+func (m *UpdateRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UpdateRequest.Unmarshal(m, b)
+}
+func (m *UpdateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UpdateRequest.Marshal(b, m, deterministic)
+}
+func (m *UpdateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpdateRequest.Merge(m, src)
+}
+func (m *UpdateRequest) XXX_Size() int {
+	return xxx_messageInfo_UpdateRequest.Size(m)
+}
+func (m *UpdateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpdateRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpdateRequest proto.InternalMessageInfo
+
+func (m *UpdateRequest) GetUpdate() *PullRequest {
+	if m != nil {
+		return m.Update
+	}
+	return nil
+}
+
+type UpdateResponse struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *UpdateResponse) Reset()         { *m = UpdateResponse{} }
+func (m *UpdateResponse) String() string { return proto.CompactTextString(m) }
+func (*UpdateResponse) ProtoMessage()    {}
+func (*UpdateResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bebe1259dc1913b7, []int{3}
+}
+
+func (m *UpdateResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UpdateResponse.Unmarshal(m, b)
+}
+func (m *UpdateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UpdateResponse.Marshal(b, m, deterministic)
+}
+func (m *UpdateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpdateResponse.Merge(m, src)
+}
+func (m *UpdateResponse) XXX_Size() int {
+	return xxx_messageInfo_UpdateResponse.Size(m)
+}
+func (m *UpdateResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpdateResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpdateResponse proto.InternalMessageInfo
+
 func init() {
+	proto.RegisterEnum("pullrequester.PullRequest_Check_Pass", PullRequest_Check_Pass_name, PullRequest_Check_Pass_value)
+	proto.RegisterType((*PullRequest)(nil), "pullrequester.PullRequest")
+	proto.RegisterType((*PullRequest_Check)(nil), "pullrequester.PullRequest.Check")
 	proto.RegisterType((*Config)(nil), "pullrequester.Config")
+	proto.RegisterType((*UpdateRequest)(nil), "pullrequester.UpdateRequest")
+	proto.RegisterType((*UpdateResponse)(nil), "pullrequester.UpdateResponse")
 }
 
 func init() { proto.RegisterFile("pullrequester.proto", fileDescriptor_bebe1259dc1913b7) }
 
 var fileDescriptor_bebe1259dc1913b7 = []byte{
-	// 89 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x2e, 0x28, 0xcd, 0xc9,
-	0x29, 0x4a, 0x2d, 0x2c, 0x4d, 0x2d, 0x2e, 0x49, 0x2d, 0xd2, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17,
-	0xe2, 0x45, 0x11, 0x54, 0x52, 0xe6, 0x62, 0x73, 0xce, 0xcf, 0x4b, 0xcb, 0x4c, 0x17, 0x92, 0xe4,
-	0xe2, 0xc8, 0x49, 0x2c, 0x2e, 0x89, 0x2f, 0x2a, 0xcd, 0x93, 0x60, 0x54, 0x60, 0xd4, 0x60, 0x0e,
-	0x62, 0x07, 0xf1, 0x83, 0x4a, 0xf3, 0x92, 0xd8, 0xc0, 0x5a, 0x8d, 0x01, 0x01, 0x00, 0x00, 0xff,
-	0xff, 0xa6, 0x71, 0x6c, 0xb7, 0x51, 0x00, 0x00, 0x00,
+	// 309 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x91, 0xdf, 0x4a, 0xc3, 0x30,
+	0x18, 0xc5, 0x97, 0xfd, 0xe9, 0xe6, 0x57, 0x36, 0xbb, 0x08, 0x32, 0x87, 0xc2, 0x88, 0x88, 0xc3,
+	0x8b, 0x5e, 0xd4, 0x2b, 0x2f, 0x47, 0x41, 0x10, 0x75, 0x1b, 0x19, 0xc3, 0xcb, 0xd1, 0xd5, 0x4c,
+	0x87, 0x69, 0x53, 0x93, 0x66, 0x2f, 0xe0, 0x13, 0xfa, 0x46, 0xd2, 0xa4, 0x83, 0x55, 0xd8, 0xdd,
+	0x77, 0xce, 0x77, 0x7a, 0xfa, 0x4b, 0x02, 0x67, 0x99, 0xe6, 0x5c, 0xb2, 0x6f, 0xcd, 0x54, 0xce,
+	0xa4, 0x9f, 0x49, 0x91, 0x0b, 0xdc, 0xad, 0x98, 0xe4, 0x17, 0x81, 0x3b, 0xd7, 0x9c, 0x53, 0xeb,
+	0x60, 0x0f, 0x1a, 0x5a, 0xf2, 0x01, 0x1a, 0xa1, 0xf1, 0x09, 0x2d, 0x46, 0x7c, 0x07, 0xfd, 0x54,
+	0x27, 0x6b, 0x26, 0x57, 0x62, 0xb3, 0x8a, 0x45, 0x92, 0x6c, 0x73, 0x35, 0xa8, 0x8f, 0xd0, 0xb8,
+	0x45, 0x4f, 0xed, 0x62, 0xb6, 0x09, 0xad, 0x3d, 0xfc, 0x41, 0xd0, 0x0a, 0x3f, 0x59, 0xfc, 0x85,
+	0xcf, 0xc1, 0x51, 0x42, 0xcb, 0x98, 0x95, 0x55, 0xa5, 0xc2, 0x0f, 0xd0, 0xcc, 0x22, 0x65, 0x0b,
+	0x7a, 0xc1, 0x8d, 0x5f, 0x45, 0x3c, 0x20, 0xf1, 0x4d, 0x8f, 0x3f, 0x8f, 0x94, 0xa2, 0xe6, 0x13,
+	0x72, 0x0b, 0xcd, 0x42, 0x61, 0x17, 0xda, 0xcb, 0xe9, 0xf3, 0x74, 0xf6, 0x36, 0xf5, 0x6a, 0xb8,
+	0x03, 0xcd, 0xc7, 0xc9, 0xd3, 0x8b, 0x87, 0x8a, 0x69, 0x3e, 0x59, 0x2c, 0xbc, 0x3a, 0xb9, 0x06,
+	0x27, 0x14, 0xe9, 0x66, 0xfb, 0x81, 0x2f, 0xa0, 0xc3, 0x23, 0x95, 0xaf, 0xa4, 0x4e, 0x0d, 0x47,
+	0x83, 0xb6, 0x0b, 0x4d, 0x75, 0x4a, 0x42, 0xe8, 0x2e, 0xb3, 0xf7, 0x28, 0x67, 0xfb, 0x93, 0x07,
+	0xe0, 0x68, 0x63, 0x98, 0xa4, 0x1b, 0x0c, 0x8f, 0xb3, 0xd1, 0x32, 0x49, 0x3c, 0xe8, 0xed, 0x4b,
+	0x54, 0x26, 0x52, 0xc5, 0x82, 0x08, 0xdc, 0x57, 0xb1, 0x63, 0x0b, 0x26, 0x77, 0xdb, 0x98, 0x61,
+	0x0a, 0x7d, 0x1b, 0x38, 0xbc, 0xe3, 0xcb, 0x7f, 0xcd, 0x15, 0x8e, 0xe1, 0xd5, 0x91, 0xad, 0xfd,
+	0x01, 0xa9, 0xad, 0x1d, 0xf3, 0x90, 0xf7, 0x7f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xb6, 0xda, 0x04,
+	0x20, 0xdf, 0x01, 0x00, 0x00,
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion4
+
+// MoveServiceClient is the client API for MoveService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type MoveServiceClient interface {
+	UpdatePullRequest(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*UpdateResponse, error)
+}
+
+type moveServiceClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewMoveServiceClient(cc *grpc.ClientConn) MoveServiceClient {
+	return &moveServiceClient{cc}
+}
+
+func (c *moveServiceClient) UpdatePullRequest(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*UpdateResponse, error) {
+	out := new(UpdateResponse)
+	err := c.cc.Invoke(ctx, "/pullrequester.MoveService/UpdatePullRequest", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// MoveServiceServer is the server API for MoveService service.
+type MoveServiceServer interface {
+	UpdatePullRequest(context.Context, *UpdateRequest) (*UpdateResponse, error)
+}
+
+func RegisterMoveServiceServer(s *grpc.Server, srv MoveServiceServer) {
+	s.RegisterService(&_MoveService_serviceDesc, srv)
+}
+
+func _MoveService_UpdatePullRequest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MoveServiceServer).UpdatePullRequest(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pullrequester.MoveService/UpdatePullRequest",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MoveServiceServer).UpdatePullRequest(ctx, req.(*UpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _MoveService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "pullrequester.MoveService",
+	HandlerType: (*MoveServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "UpdatePullRequest",
+			Handler:    _MoveService_UpdatePullRequest_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "pullrequester.proto",
 }

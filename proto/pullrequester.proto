@@ -2,7 +2,33 @@ syntax = "proto3";
 
 package pullrequester;
 
+message PullRequest {
+  string url = 1;
+  int32 number_of_commits = 2;
+
+  message Check {
+    string source = 1;
+    enum Pass {
+      UNKNOWN = 0;
+      FAIL = 1;
+      PASS = 2;
+    }
+    Pass pass = 2;
+  }
+}
+
 message Config {
   int64 last_run = 1;
 }
+
+message UpdateRequest {
+  PullRequest update = 1;
+}
+
+message UpdateResponse {}
+  
+service MoveService {
+  rpc UpdatePullRequest(UpdateRequest) returns (UpdateResponse) {};
+}
+
 
