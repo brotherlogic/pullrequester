@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package pullrequester;
+
+message Config {
+  int64 last_run = 1;
+}
+
