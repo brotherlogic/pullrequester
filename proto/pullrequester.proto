@@ -15,10 +15,13 @@ message PullRequest {
     }
     Pass pass = 2;
   }
+
+  repeated Check checks = 3;
 }
 
 message Config {
   int64 last_run = 1;
+  repeated PullRequest tracking = 2;
 }
 
 message UpdateRequest {
@@ -27,7 +30,7 @@ message UpdateRequest {
 
 message UpdateResponse {}
   
-service MoveService {
+service PullRequesterService {
   rpc UpdatePullRequest(UpdateRequest) returns (UpdateResponse) {};
 }
 

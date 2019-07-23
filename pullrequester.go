@@ -55,7 +55,7 @@ func (s *Server) load(ctx context.Context) error {
 
 // DoRegister does RPC registration
 func (s *Server) DoRegister(server *grpc.Server) {
-	// Pass
+	pb.RegisterPullRequesterServiceServer(server, s)
 }
 
 // ReportHealth alerts if we're not healthy
@@ -82,7 +82,8 @@ func (s *Server) Mote(ctx context.Context, master bool) error {
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
 	return []*pbg.State{
-		&pbg.State{Key: "last_run", Value: s.config.LastRun},
+		&pbg.State{Key: "last_run", TimeValue: s.config.LastRun},
+		&pbg.State{Key: "tracking", Text: fmt.Sprintf("%v", s.config.Tracking)},
 	}
 }
 
