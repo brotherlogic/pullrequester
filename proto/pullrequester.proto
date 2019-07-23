@@ -17,6 +17,8 @@ message PullRequest {
   }
 
   repeated Check checks = 3;
+  repeated string shas = 4;
+  string name = 5;
 }
 
 message Config {
