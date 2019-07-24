@@ -15,6 +15,12 @@ func (s *Server) update(ctx context.Context, req, reqIn *pb.PullRequest) (*pb.Up
 			if checkIn.Source == check.Source {
 				found = true
 				checkIn.Pass = check.Pass
+
+				if check.Pass != pb.PullRequest_Check_PASS {
+					for _, checkFail := range req.Checks {
+						checkFail.Pass = pb.PullRequest_Check_FAIL
+					}
+				}
 			}
 		}
 
