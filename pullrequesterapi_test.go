@@ -94,3 +94,18 @@ func TestAddUpdate(t *testing.T) {
 	}
 
 }
+
+func TestProcessPullRequest(t *testing.T) {
+	s := InitTest()
+
+	err := s.processPullRequest(context.Background(), &pb.PullRequest{NumberOfCommits: 1, Checks: []*pb.PullRequest_Check{&pb.PullRequest_Check{Pass: pb.PullRequest_Check_FAIL}, &pb.PullRequest_Check{Pass: pb.PullRequest_Check_PASS}}})
+	if err == nil {
+		t.Fatalf("Should have failed")
+	}
+
+	err = s.processPullRequest(context.Background(), &pb.PullRequest{NumberOfCommits: 1, Checks: []*pb.PullRequest_Check{&pb.PullRequest_Check{Pass: pb.PullRequest_Check_PASS}, &pb.PullRequest_Check{Pass: pb.PullRequest_Check_PASS}}})
+	if err != nil {
+		t.Errorf("Should have passed")
+	}
+
+}
