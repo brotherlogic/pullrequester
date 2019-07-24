@@ -17,6 +17,8 @@ func (s *Server) updateChecks(check *pb.PullRequest_Check, req *pb.PullRequest) 
 }
 
 func (s *Server) update(ctx context.Context, req, reqIn *pb.PullRequest) (*pb.UpdateResponse, error) {
+	defer s.save(ctx)
+
 	if reqIn.NumberOfCommits > 0 {
 		req.NumberOfCommits = reqIn.NumberOfCommits
 	}
