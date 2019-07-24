@@ -4,15 +4,26 @@ import (
 	"context"
 	"testing"
 
+	pbgh "github.com/brotherlogic/githubcard/proto"
 	"github.com/brotherlogic/keystore/client"
+	"google.golang.org/grpc"
 
 	pb "github.com/brotherlogic/pullrequester/proto"
 )
+
+type testGithub struct {
+	dial func(server string) (*grpc.ClientConn, error)
+}
+
+func (p *testGithub) getPullRequest(ctx context.Context, req *pbgh.PullRequest) (*pbgh.PullResponse, error) {
+	return &pbgh.PullResponse{}, nil
+}
 
 func InitTest() *Server {
 	s := Init()
 	s.SkipLog = true
 	s.GoServer.KSclient = *keystoreclient.GetTestClient("./testing")
+	s.github = &testGithub{}
 
 	return s
 }
@@ -29,7 +40,7 @@ func TestAddPlainUpdate(t *testing.T) {
 func TestAddUpdate(t *testing.T) {
 	s := InitTest()
 
-	_, err := s.UpdatePullRequest(context.Background(), &pb.UpdateRequest{Update: &pb.PullRequest{Url: "blah", Shas: []string{"sha1"}}})
+	_, err := s.UpdatePullRequest(context.Background(), &pb.UpdateRequest{Update: &pb.PullRequest{Url: "https://api.github.com/repos/brotherlogic/pullrequester/pulls/11", Shas: []string{"sha1"}}})
 	if err != nil {
 		t.Errorf("Bad update: %v", err)
 	}
@@ -38,7 +49,7 @@ func TestAddUpdate(t *testing.T) {
 		t.Errorf("New Pull request was not tracked!")
 	}
 
-	_, err = s.UpdatePullRequest(context.Background(), &pb.UpdateRequest{Update: &pb.PullRequest{Url: "blah", Shas: []string{"sha2"}}})
+	_, err = s.UpdatePullRequest(context.Background(), &pb.UpdateRequest{Update: &pb.PullRequest{Url: "https://api.github.com/repos/brotherlogic/pullrequester/pulls/11", Shas: []string{"sha2"}}})
 
 	if err != nil {
 		t.Errorf("New Pull request was not tracked!")
@@ -48,7 +59,7 @@ func TestAddUpdate(t *testing.T) {
 		t.Errorf("New pull request was added not appended")
 	}
 
-	_, err = s.UpdatePullRequest(context.Background(), &pb.UpdateRequest{Update: &pb.PullRequest{Url: "blah", NumberOfCommits: 5, Checks: []*pb.PullRequest_Check{&pb.PullRequest_Check{Source: "blahs", Pass: pb.PullRequest_Check_PASS}}}})
+	_, err = s.UpdatePullRequest(context.Background(), &pb.UpdateRequest{Update: &pb.PullRequest{Url: "https://api.github.com/repos/brotherlogic/pullrequester/pulls/11", NumberOfCommits: 5, Checks: []*pb.PullRequest_Check{&pb.PullRequest_Check{Source: "blahs", Pass: pb.PullRequest_Check_PASS}}}})
 
 	if err != nil {
 		t.Errorf("New Pull request was not tracked!")
@@ -58,7 +69,7 @@ func TestAddUpdate(t *testing.T) {
 		t.Errorf("New pull request was added not appended")
 	}
 
-	_, err = s.UpdatePullRequest(context.Background(), &pb.UpdateRequest{Update: &pb.PullRequest{Url: "blah", NumberOfCommits: 5, Checks: []*pb.PullRequest_Check{&pb.PullRequest_Check{Source: "blahs", Pass: pb.PullRequest_Check_PASS}}}})
+	_, err = s.UpdatePullRequest(context.Background(), &pb.UpdateRequest{Update: &pb.PullRequest{Url: "https://api.github.com/repos/brotherlogic/pullrequester/pulls/11", NumberOfCommits: 5, Checks: []*pb.PullRequest_Check{&pb.PullRequest_Check{Source: "blahs", Pass: pb.PullRequest_Check_PASS}}}})
 
 	if len(s.config.Tracking[0].Checks) != 1 {
 		t.Errorf("Too many checks!")

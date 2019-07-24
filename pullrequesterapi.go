@@ -2,11 +2,25 @@ package main
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"golang.org/x/net/context"
 
+	pbgh "github.com/brotherlogic/githubcard/proto"
 	pb "github.com/brotherlogic/pullrequester/proto"
 )
+
+func (s *Server) updatePR(ctx context.Context, req *pb.PullRequest) {
+	if len(req.Url) > 0 {
+		elems := strings.Split(req.Url, "/")
+		val, _ := strconv.Atoi(elems[7])
+		prs, err := s.github.getPullRequest(ctx, &pbgh.PullRequest{Job: elems[5], PullNumber: int32(val)})
+		if err != nil {
+			req.NumberOfCommits = prs.NumberOfCommits
+		}
+	}
+}
 
 func (s *Server) updateChecks(check *pb.PullRequest_Check, req *pb.PullRequest) {
 	if check.Pass != pb.PullRequest_Check_PASS {
@@ -17,6 +31,7 @@ func (s *Server) updateChecks(check *pb.PullRequest_Check, req *pb.PullRequest) 
 }
 
 func (s *Server) update(ctx context.Context, req, reqIn *pb.PullRequest) (*pb.UpdateResponse, error) {
+	defer s.updatePR(ctx, req)
 	defer s.save(ctx)
 
 	if reqIn.NumberOfCommits > 0 {
