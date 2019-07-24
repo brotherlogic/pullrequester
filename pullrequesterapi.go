@@ -30,16 +30,19 @@ func (s *Server) updateChecks(check *pb.PullRequest_Check, req *pb.PullRequest) 
 	}
 }
 
-func (s *Server) processPullRequest(ctx context.Context, pr *pb.PullRequest) {
-	if pr.NumberOfCommits == 1 {
+func (s *Server) processPullRequest(ctx context.Context, pr *pb.PullRequest) error {
+	if pr.NumberOfCommits == 1 && len(pr.Checks) == 2 {
 		for _, check := range pr.Checks {
 			if check.Pass != pb.PullRequest_Check_PASS {
-				return
+				return fmt.Errorf("PR is not passing tests")
 			}
 		}
 
 		s.Log(fmt.Sprintf("Ready for Auto Merge %v", pr.Url))
+		return nil
 	}
+
+	return fmt.Errorf("PR is not ready for auto merge")
 }
 
 func (s *Server) update(ctx context.Context, req, reqIn *pb.PullRequest) (*pb.UpdateResponse, error) {
