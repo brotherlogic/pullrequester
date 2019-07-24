@@ -22,6 +22,7 @@ import (
 
 type github interface {
 	getPullRequest(ctx context.Context, req *pbgh.PullRequest) (*pbgh.PullResponse, error)
+	closePullRequest(ctx context.Context, req *pbgh.CloseRequest) (*pbgh.CloseResponse, error)
 }
 
 type prodGithub struct {
@@ -37,6 +38,17 @@ func (p *prodGithub) getPullRequest(ctx context.Context, req *pbgh.PullRequest) 
 
 	client := pbgh.NewGithubClient(conn)
 	return client.GetPullRequest(ctx, req)
+}
+
+func (p *prodGithub) closePullRequest(ctx context.Context, req *pbgh.CloseRequest) (*pbgh.CloseResponse, error) {
+	conn, err := p.dial("githubcard")
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	client := pbgh.NewGithubClient(conn)
+	return client.ClosePullRequest(ctx, req)
 }
 
 const (
