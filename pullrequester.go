@@ -5,17 +5,39 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/brotherlogic/goserver"
+	"github.com/brotherlogic/goserver/utils"
 	"github.com/brotherlogic/keystore/client"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
+	pbgh "github.com/brotherlogic/githubcard/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
-	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/pullrequester/proto"
 )
+
+type github interface {
+	getPullRequest(ctx context.Context, req *pbgh.PullRequest) (*pbgh.PullResponse, error)
+}
+
+type prodGithub struct {
+	dial func(server string) (*grpc.ClientConn, error)
+}
+
+func (p *prodGithub) getPullRequest(ctx context.Context, req *pbgh.PullRequest) (*pbgh.PullResponse, error) {
+	conn, err := p.dial("githubcard")
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	client := pbgh.NewGithubClient(conn)
+	return client.GetPullRequest(ctx, req)
+}
 
 const (
 	// KEY - where we store sale info
@@ -26,6 +48,26 @@ const (
 type Server struct {
 	*goserver.GoServer
 	config *pb.Config
+	github github
+}
+
+func (s *Server) cleanTracking(ctx context.Context) error {
+	for i, pr := range s.config.Tracking {
+		elems := strings.Split(pr.Url, "/")
+		val, _ := strconv.Atoi(elems[7])
+		prs, err := s.github.getPullRequest(ctx, &pbgh.PullRequest{Job: elems[5], PullNumber: int32(val)})
+
+		if err != nil {
+			return err
+		}
+
+		if !prs.IsOpen {
+			s.config.Tracking = append(s.config.Tracking[:i], s.config.Tracking[i+1:]...)
+			return s.cleanTracking(ctx)
+		}
+	}
+
+	return nil
 }
 
 // Init builds the server
@@ -102,6 +144,8 @@ func main() {
 	server.PrepServer()
 	server.Register = server
 	server.RegisterServer("pullrequester", false)
+
+	server.RegisterRepeatingTask(server.cleanTracking, "clean_tracking", time.Minute*5)
 
 	if *init {
 		ctx, cancel := utils.BuildContext("pullrequester", "pullrequester")
