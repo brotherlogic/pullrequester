@@ -39,7 +39,12 @@ func (s *Server) processPullRequest(ctx context.Context, pr *pb.PullRequest) err
 		}
 
 		s.Log(fmt.Sprintf("Ready for Auto Merge %v", pr.Url))
-		return nil
+		elems := strings.Split(pr.Url, "/")
+		val, _ := strconv.Atoi(elems[7])
+
+		resp, err := s.github.closePullRequest(ctx, &pbgh.CloseRequest{Job: elems[5], PullNumber: int32(val), Sha: pr.Shas[len(pr.Shas)-1]})
+		s.Log(fmt.Sprintf("Result %v, %v", resp, err))
+		return err
 	}
 
 	return fmt.Errorf("PR is not ready for auto merge")

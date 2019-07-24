@@ -19,6 +19,10 @@ func (p *testGithub) getPullRequest(ctx context.Context, req *pbgh.PullRequest) 
 	return &pbgh.PullResponse{}, nil
 }
 
+func (p *testGithub) closePullRequest(ctx context.Context, req *pbgh.CloseRequest) (*pbgh.CloseResponse, error) {
+	return &pbgh.CloseResponse{}, nil
+}
+
 func InitTest() *Server {
 	s := Init()
 	s.SkipLog = true
@@ -103,7 +107,7 @@ func TestProcessPullRequest(t *testing.T) {
 		t.Fatalf("Should have failed")
 	}
 
-	err = s.processPullRequest(context.Background(), &pb.PullRequest{NumberOfCommits: 1, Checks: []*pb.PullRequest_Check{&pb.PullRequest_Check{Pass: pb.PullRequest_Check_PASS}, &pb.PullRequest_Check{Pass: pb.PullRequest_Check_PASS}}})
+	err = s.processPullRequest(context.Background(), &pb.PullRequest{Shas: []string{"sha1"}, Url: "https://api.github.com/repos/brotherlogic/pullrequester/pulls/11", NumberOfCommits: 1, Checks: []*pb.PullRequest_Check{&pb.PullRequest_Check{Pass: pb.PullRequest_Check_PASS}, &pb.PullRequest_Check{Pass: pb.PullRequest_Check_PASS}}})
 	if err != nil {
 		t.Errorf("Should have passed")
 	}
