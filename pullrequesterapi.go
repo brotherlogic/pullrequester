@@ -85,7 +85,7 @@ func (s *Server) update(ctx context.Context, req, reqIn *pb.PullRequest) (*pb.Up
 		}
 	}
 
-	s.processPullRequest(ctx, req)
+	s.Log(fmt.Sprintf("%v", s.processPullRequest(ctx, req)))
 
 	return &pb.UpdateResponse{}, nil
 }
