@@ -76,6 +76,7 @@ func Init() *Server {
 		GoServer: &goserver.GoServer{},
 		config:   &pb.Config{},
 	}
+	s.github = &prodGithub{dial: s.DialMaster}
 	return s
 }
 
