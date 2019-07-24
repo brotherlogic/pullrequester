@@ -16,7 +16,7 @@ func (s *Server) updatePR(ctx context.Context, req *pb.PullRequest) {
 		elems := strings.Split(req.Url, "/")
 		val, _ := strconv.Atoi(elems[7])
 		prs, err := s.github.getPullRequest(ctx, &pbgh.PullRequest{Job: elems[5], PullNumber: int32(val)})
-		if err != nil {
+		if err == nil {
 			req.NumberOfCommits = prs.NumberOfCommits
 		}
 	}
