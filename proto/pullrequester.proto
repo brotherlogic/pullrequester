@@ -18,6 +18,8 @@ message PullRequest {
 
   repeated Check checks = 3;
   repeated string shas = 4;
+
+  // The name of the underlying branch
   string name = 5;
 }
 
