@@ -54,6 +54,10 @@ func (s *Server) update(ctx context.Context, req, reqIn *pb.PullRequest) (*pb.Up
 	defer s.updatePR(ctx, req)
 	defer s.save(ctx)
 
+	if len(reqIn.Name) > 0 {
+		req.Name = reqIn.Name
+	}
+
 	if reqIn.NumberOfCommits > 0 && req.NumberOfCommits != reqIn.NumberOfCommits {
 		req.NumberOfCommits = reqIn.NumberOfCommits
 		for _, check := range req.Checks {
