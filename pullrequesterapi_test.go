@@ -35,7 +35,7 @@ func InitTest() *Server {
 func TestAddPlainUpdate(t *testing.T) {
 	s := InitTest()
 
-	_, err := s.UpdatePullRequest(context.Background(), &pb.UpdateRequest{Update: &pb.PullRequest{NumberOfCommits: 5, Shas: []string{"sha2"}, Checks: []*pb.PullRequest_Check{&pb.PullRequest_Check{Source: "blahs"}}}})
+	_, err := s.UpdatePullRequest(context.Background(), &pb.UpdateRequest{Update: &pb.PullRequest{Name: "testing", NumberOfCommits: 5, Shas: []string{"sha2"}, Checks: []*pb.PullRequest_Check{&pb.PullRequest_Check{Source: "blahs"}}}})
 	if err == nil {
 		t.Errorf("Missing commit did not fail")
 	}
@@ -53,7 +53,7 @@ func TestAddUpdate(t *testing.T) {
 		t.Errorf("New Pull request was not tracked!")
 	}
 
-	_, err = s.UpdatePullRequest(context.Background(), &pb.UpdateRequest{Update: &pb.PullRequest{Url: "https://api.github.com/repos/brotherlogic/pullrequester/pulls/11", Shas: []string{"sha2"}}})
+	_, err = s.UpdatePullRequest(context.Background(), &pb.UpdateRequest{Update: &pb.PullRequest{Name: "adding_name", Url: "https://api.github.com/repos/brotherlogic/pullrequester/pulls/11", Shas: []string{"sha2"}}})
 
 	if err != nil {
 		t.Errorf("New Pull request was not tracked!")
