@@ -42,7 +42,7 @@ func (s *Server) processPullRequest(ctx context.Context, pr *pb.PullRequest) err
 		elems := strings.Split(pr.Url, "/")
 		val, _ := strconv.Atoi(elems[7])
 
-		resp, err := s.github.closePullRequest(ctx, &pbgh.CloseRequest{Job: elems[5], PullNumber: int32(val), Sha: pr.Shas[len(pr.Shas)-1]})
+		resp, err := s.github.closePullRequest(ctx, &pbgh.CloseRequest{Job: elems[5], PullNumber: int32(val), Sha: pr.Shas[len(pr.Shas)-1], BranchName: pr.Name})
 		s.Log(fmt.Sprintf("Result %v, %v", resp, err))
 		return err
 	}
