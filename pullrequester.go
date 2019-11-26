@@ -156,7 +156,7 @@ func main() {
 	server.GoServer.KSclient = *keystoreclient.GetClient(server.DialMaster)
 	server.PrepServer()
 	server.Register = server
-	server.RegisterServer("pullrequester", false)
+	server.RegisterServerV2("pullrequester", false)
 
 	server.RegisterRepeatingTask(server.cleanTracking, "clean_tracking", time.Minute*5)
 
