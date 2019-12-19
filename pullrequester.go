@@ -66,14 +66,19 @@ type Server struct {
 func (s *Server) cleanTracking(ctx context.Context) error {
 	for i, pr := range s.config.Tracking {
 		elems := strings.Split(pr.Url, "/")
-		val, _ := strconv.Atoi(elems[7])
-		prs, err := s.github.getPullRequest(ctx, &pbgh.PullRequest{Job: elems[5], PullNumber: int32(val)})
+		if len(elems) > 7 {
+			val, _ := strconv.Atoi(elems[7])
+			prs, err := s.github.getPullRequest(ctx, &pbgh.PullRequest{Job: elems[5], PullNumber: int32(val)})
 
-		if err != nil {
-			return err
-		}
+			if err != nil {
+				return err
+			}
 
-		if !prs.IsOpen {
+			if !prs.IsOpen {
+				s.config.Tracking = append(s.config.Tracking[:i], s.config.Tracking[i+1:]...)
+				return s.cleanTracking(ctx)
+			}
+		} else {
 			s.config.Tracking = append(s.config.Tracking[:i], s.config.Tracking[i+1:]...)
 			return s.cleanTracking(ctx)
 		}
