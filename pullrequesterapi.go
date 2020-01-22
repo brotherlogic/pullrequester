@@ -121,5 +121,5 @@ func (s *Server) UpdatePullRequest(ctx context.Context, req *pb.UpdateRequest) (
 		}
 	}
 
-	return nil, fmt.Errorf("Unable to locate PR %v", req)
+	return nil, fmt.Errorf("Unable to locate PR %v [%v]", req, s.buildAll(ctx))
 }
