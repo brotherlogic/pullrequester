@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc"
 
 	pbgh "github.com/brotherlogic/githubcard/proto"
+	gspb "github.com/brotherlogic/goserver/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
 	pb "github.com/brotherlogic/pullrequester/proto"
 )
@@ -145,6 +146,31 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "last_run", TimeValue: s.config.LastRun},
 		&pbg.State{Key: "tracking", Text: fmt.Sprintf("%v", s.config.Tracking)},
 	}
+}
+
+func (s *Server) buildAll(ctx context.Context) string {
+	ret := ""
+	if !s.SkipLog {
+		things, err := s.GetServers("pullrequester")
+		if err == nil {
+			for _, th := range things {
+				conn, err := s.DoDial(th)
+				defer conn.Close()
+				if err == nil {
+					check := gspb.NewGoserverServiceClient(conn)
+					state, err := check.State(ctx, &gspb.Empty{})
+					if err == nil {
+						for _, st := range state.GetStates() {
+							if st.Key == "tracking" {
+								ret += st.Text + " AND "
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return ret
 }
 
 func main() {
