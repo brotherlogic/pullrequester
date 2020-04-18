@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package pullrequester;
 
+option go_package = "github.com/brotherlogic/pullrequester/proto";
+
 message PullRequest {
   string url = 1;
   int32 number_of_commits = 2;
