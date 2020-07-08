@@ -7,10 +7,8 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/brotherlogic/goserver"
-	"github.com/brotherlogic/goserver/utils"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
@@ -26,11 +24,11 @@ type github interface {
 }
 
 type prodGithub struct {
-	dial func(server string) (*grpc.ClientConn, error)
+	dial func(ctx context.Context, server string) (*grpc.ClientConn, error)
 }
 
 func (p *prodGithub) getPullRequest(ctx context.Context, req *pbgh.PullRequest) (*pbgh.PullResponse, error) {
-	conn, err := p.dial("githubcard")
+	conn, err := p.dial(ctx, "githubcard")
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +39,7 @@ func (p *prodGithub) getPullRequest(ctx context.Context, req *pbgh.PullRequest) 
 }
 
 func (p *prodGithub) closePullRequest(ctx context.Context, req *pbgh.CloseRequest) (*pbgh.CloseResponse, error) {
-	conn, err := p.dial("githubcard")
+	conn, err := p.dial(ctx, "githubcard")
 	if err != nil {
 		return nil, err
 	}
@@ -59,12 +57,11 @@ const (
 //Server main server type
 type Server struct {
 	*goserver.GoServer
-	config *pb.Config
 	github github
 }
 
-func (s *Server) cleanTracking(ctx context.Context) error {
-	for i, pr := range s.config.Tracking {
+func (s *Server) cleanTracking(ctx context.Context, config *pb.Config) error {
+	for i, pr := range config.Tracking {
 		elems := strings.Split(pr.Url, "/")
 		if len(elems) > 7 {
 			val, _ := strconv.Atoi(elems[7])
@@ -75,12 +72,12 @@ func (s *Server) cleanTracking(ctx context.Context) error {
 			}
 
 			if !prs.IsOpen {
-				s.config.Tracking = append(s.config.Tracking[:i], s.config.Tracking[i+1:]...)
-				return s.cleanTracking(ctx)
+				config.Tracking = append(config.Tracking[:i], config.Tracking[i+1:]...)
+				return s.cleanTracking(ctx, config)
 			}
 		} else {
-			s.config.Tracking = append(s.config.Tracking[:i], s.config.Tracking[i+1:]...)
-			return s.cleanTracking(ctx)
+			config.Tracking = append(config.Tracking[:i], config.Tracking[i+1:]...)
+			return s.cleanTracking(ctx, config)
 		}
 	}
 
@@ -91,26 +88,25 @@ func (s *Server) cleanTracking(ctx context.Context) error {
 func Init() *Server {
 	s := &Server{
 		GoServer: &goserver.GoServer{},
-		config:   &pb.Config{},
 	}
-	s.github = &prodGithub{dial: s.DialMaster}
+	s.github = &prodGithub{dial: s.FDialServer}
 	return s
 }
 
-func (s *Server) save(ctx context.Context) {
-	s.KSclient.Save(ctx, KEY, s.config)
+func (s *Server) save(ctx context.Context, config *pb.Config) error {
+	return s.KSclient.Save(ctx, KEY, config)
 }
 
-func (s *Server) load(ctx context.Context) error {
+func (s *Server) load(ctx context.Context) (*pb.Config, error) {
 	config := &pb.Config{}
 	data, _, err := s.KSclient.Read(ctx, KEY, config)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	s.config = data.(*pb.Config)
-	return nil
+	config = data.(*pb.Config)
+	return config, nil
 }
 
 // DoRegister does RPC registration
@@ -125,26 +121,17 @@ func (s *Server) ReportHealth() bool {
 
 // Shutdown the server
 func (s *Server) Shutdown(ctx context.Context) error {
-	s.save(ctx)
 	return nil
 }
 
 // Mote promotes/demotes this server
 func (s *Server) Mote(ctx context.Context, master bool) error {
-	if master {
-		err := s.load(ctx)
-		return err
-	}
-
 	return nil
 }
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
-	return []*pbg.State{
-		&pbg.State{Key: "last_run", TimeValue: s.config.LastRun},
-		&pbg.State{Key: "tracking", Text: fmt.Sprintf("%v", s.config.Tracking)},
-	}
+	return []*pbg.State{}
 }
 
 func (s *Server) buildAll(ctx context.Context) string {
@@ -174,7 +161,6 @@ func (s *Server) buildAll(ctx context.Context) string {
 
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
-	var init = flag.Bool("init", false, "Prep server")
 	flag.Parse()
 
 	//Turn off logging
@@ -187,14 +173,6 @@ func main() {
 	server.Register = server
 	err := server.RegisterServerV2("pullrequester", false, true)
 	if err != nil {
-		return
-	}
-
-	if *init {
-		ctx, cancel := utils.BuildContext("pullrequester", "pullrequester")
-		defer cancel()
-		server.config.LastRun = time.Now().Unix()
-		server.save(ctx)
 		return
 	}
 
