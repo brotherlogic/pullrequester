@@ -101,6 +101,7 @@ func (s *Server) update(ctx context.Context, req, reqIn *pb.PullRequest) (*pb.Up
 
 // UpdatePullRequest updates the pull request
 func (s *Server) UpdatePullRequest(ctx context.Context, req *pb.UpdateRequest) (*pb.UpdateResponse, error) {
+	s.Log(fmt.Sprintf("Update: %v", req))
 	if len(req.Update.Url) > 0 {
 		for _, pr := range s.config.Tracking {
 			if pr.Url == req.Update.Url {
