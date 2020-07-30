@@ -141,10 +141,7 @@ func (s *Server) Mote(ctx context.Context, master bool) error {
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
-	return []*pbg.State{
-		&pbg.State{Key: "last_run", TimeValue: s.config.LastRun},
-		&pbg.State{Key: "tracking", Text: fmt.Sprintf("%v", s.config.Tracking)},
-	}
+	return []*pbg.State{}
 }
 
 func (s *Server) buildAll(ctx context.Context) string {
