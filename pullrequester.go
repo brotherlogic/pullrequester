@@ -15,7 +15,6 @@ import (
 	"google.golang.org/grpc"
 
 	pbgh "github.com/brotherlogic/githubcard/proto"
-	gspb "github.com/brotherlogic/goserver/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
 	pb "github.com/brotherlogic/pullrequester/proto"
 )
@@ -26,11 +25,11 @@ type github interface {
 }
 
 type prodGithub struct {
-	dial func(server string) (*grpc.ClientConn, error)
+	dial func(ctx context.Context, server string) (*grpc.ClientConn, error)
 }
 
 func (p *prodGithub) getPullRequest(ctx context.Context, req *pbgh.PullRequest) (*pbgh.PullResponse, error) {
-	conn, err := p.dial("githubcard")
+	conn, err := p.dial(ctx, "githubcard")
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +40,7 @@ func (p *prodGithub) getPullRequest(ctx context.Context, req *pbgh.PullRequest) 
 }
 
 func (p *prodGithub) closePullRequest(ctx context.Context, req *pbgh.CloseRequest) (*pbgh.CloseResponse, error) {
-	conn, err := p.dial("githubcard")
+	conn, err := p.dial(ctx, "githubcard")
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +92,7 @@ func Init() *Server {
 		GoServer: &goserver.GoServer{},
 		config:   &pb.Config{},
 	}
-	s.github = &prodGithub{dial: s.DialMaster}
+	s.github = &prodGithub{dial: s.FDialServer}
 	return s
 }
 
@@ -145,31 +144,6 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "last_run", TimeValue: s.config.LastRun},
 		&pbg.State{Key: "tracking", Text: fmt.Sprintf("%v", s.config.Tracking)},
 	}
-}
-
-func (s *Server) buildAll(ctx context.Context) string {
-	ret := ""
-	if !s.SkipLog {
-		things, err := s.GetServers("pullrequester")
-		if err == nil {
-			for _, th := range things {
-				conn, err := s.DoDial(th)
-				defer conn.Close()
-				if err == nil {
-					check := gspb.NewGoserverServiceClient(conn)
-					state, err := check.State(ctx, &gspb.Empty{})
-					if err == nil {
-						for _, st := range state.GetStates() {
-							if st.Key == "tracking" {
-								ret += st.Text + " AND "
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	return ret
 }
 
 func main() {
