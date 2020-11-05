@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	pbgh "github.com/brotherlogic/githubcard/proto"
-	"github.com/brotherlogic/keystore/client"
+	keystoreclient "github.com/brotherlogic/keystore/client"
 	"google.golang.org/grpc"
 
 	pb "github.com/brotherlogic/pullrequester/proto"
@@ -102,14 +102,25 @@ func TestAddUpdate(t *testing.T) {
 func TestProcessPullRequest(t *testing.T) {
 	s := InitTest()
 
-	err := s.processPullRequest(context.Background(), &pb.PullRequest{NumberOfCommits: 1, Checks: []*pb.PullRequest_Check{&pb.PullRequest_Check{Pass: pb.PullRequest_Check_FAIL}, &pb.PullRequest_Check{Pass: pb.PullRequest_Check_PASS}}})
+	err := s.processPullRequest(context.Background(), &pb.PullRequest{
+		NumberOfCommits: 1,
+		Checks: []*pb.PullRequest_Check{
+			&pb.PullRequest_Check{Pass: pb.PullRequest_Check_FAIL},
+			&pb.PullRequest_Check{Pass: pb.PullRequest_Check_FAIL},
+			&pb.PullRequest_Check{Pass: pb.PullRequest_Check_FAIL},
+			&pb.PullRequest_Check{Pass: pb.PullRequest_Check_PASS}}})
 	if err == nil {
 		t.Fatalf("Should have failed")
 	}
 
-	err = s.processPullRequest(context.Background(), &pb.PullRequest{Shas: []string{"sha1"}, Url: "https://api.github.com/repos/brotherlogic/pullrequester/pulls/11", NumberOfCommits: 1, Checks: []*pb.PullRequest_Check{&pb.PullRequest_Check{Pass: pb.PullRequest_Check_PASS}, &pb.PullRequest_Check{Pass: pb.PullRequest_Check_PASS}}})
+	err = s.processPullRequest(context.Background(), &pb.PullRequest{Shas: []string{"sha1"},
+		Url:             "https://api.github.com/repos/brotherlogic/pullrequester/pulls/11",
+		NumberOfCommits: 1, Checks: []*pb.PullRequest_Check{
+			&pb.PullRequest_Check{Pass: pb.PullRequest_Check_PASS},
+			&pb.PullRequest_Check{Pass: pb.PullRequest_Check_PASS},
+			&pb.PullRequest_Check{Pass: pb.PullRequest_Check_PASS},
+			&pb.PullRequest_Check{Pass: pb.PullRequest_Check_PASS}}})
 	if err != nil {
-		t.Errorf("Should have passed")
+		t.Errorf("This Should have passed: %v", err)
 	}
-
 }
