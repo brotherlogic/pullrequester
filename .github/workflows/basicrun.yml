@@ -1,4 +1,4 @@
-name: Build
+name: RunBasic
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   checks:
-    name: run
+    name: basicassess
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
