@@ -32,7 +32,7 @@ func (s *Server) updateChecks(check *pb.PullRequest_Check, req *pb.PullRequest) 
 }
 
 func (s *Server) processPullRequest(ctx context.Context, pr *pb.PullRequest) error {
-	if pr.NumberOfCommits == 1 && len(pr.Checks) == 4 {
+	if pr.NumberOfCommits == 1 {
 		for _, check := range pr.Checks {
 			if check.Pass != pb.PullRequest_Check_PASS {
 				return fmt.Errorf("PR is not passing tests")
