@@ -47,7 +47,7 @@ func (s *Server) processPullRequest(ctx context.Context, pr *pb.PullRequest) err
 		return err
 	}
 
-	return fmt.Errorf("PR is not ready for auto merge")
+	return fmt.Errorf("PR is not ready for auto merge: %v", pr)
 }
 
 func (s *Server) update(ctx context.Context, req, reqIn *pb.PullRequest) (*pb.UpdateResponse, error) {
@@ -101,7 +101,7 @@ func (s *Server) update(ctx context.Context, req, reqIn *pb.PullRequest) (*pb.Up
 
 // UpdatePullRequest updates the pull request
 func (s *Server) UpdatePullRequest(ctx context.Context, req *pb.UpdateRequest) (*pb.UpdateResponse, error) {
-	s.Log(fmt.Sprintf("Update: %v", req))
+	//s.Log(fmt.Sprintf("Update: %v", req))
 	if len(req.Update.Url) > 0 {
 		for _, pr := range s.config.Tracking {
 			if pr.Url == req.Update.Url {
