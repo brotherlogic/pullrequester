@@ -1,16 +1,10 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"io/ioutil"
-	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/brotherlogic/goserver"
-	"github.com/brotherlogic/goserver/utils"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
@@ -58,12 +52,11 @@ const (
 //Server main server type
 type Server struct {
 	*goserver.GoServer
-	config *pb.Config
 	github github
 }
 
-func (s *Server) cleanTracking(ctx context.Context) error {
-	for i, pr := range s.config.Tracking {
+func (s *Server) cleanTracking(ctx context.Context, config *pb.Config) error {
+	for i, pr := range config.Tracking {
 		elems := strings.Split(pr.Url, "/")
 		if len(elems) > 7 {
 			val, _ := strconv.Atoi(elems[7])
@@ -74,12 +67,12 @@ func (s *Server) cleanTracking(ctx context.Context) error {
 			}
 
 			if !prs.IsOpen {
-				s.config.Tracking = append(s.config.Tracking[:i], s.config.Tracking[i+1:]...)
-				return s.cleanTracking(ctx)
+				config.Tracking = append(config.Tracking[:i], config.Tracking[i+1:]...)
+				return s.cleanTracking(ctx, config)
 			}
 		} else {
-			s.config.Tracking = append(s.config.Tracking[:i], s.config.Tracking[i+1:]...)
-			return s.cleanTracking(ctx)
+			config.Tracking = append(config.Tracking[:i], config.Tracking[i+1:]...)
+			return s.cleanTracking(ctx, config)
 		}
 	}
 
@@ -90,26 +83,24 @@ func (s *Server) cleanTracking(ctx context.Context) error {
 func Init() *Server {
 	s := &Server{
 		GoServer: &goserver.GoServer{},
-		config:   &pb.Config{},
 	}
 	s.github = &prodGithub{dial: s.FDialServer}
 	return s
 }
 
-func (s *Server) save(ctx context.Context) {
-	s.KSclient.Save(ctx, KEY, s.config)
+func (s *Server) save(ctx context.Context, config *pb.Config) {
+	s.KSclient.Save(ctx, KEY, config)
 }
 
-func (s *Server) load(ctx context.Context) error {
+func (s *Server) load(ctx context.Context) (*pb.Config, error) {
 	config := &pb.Config{}
 	data, _, err := s.KSclient.Read(ctx, KEY, config)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	s.config = data.(*pb.Config)
-	return nil
+	return data.(*pb.Config), nil
 }
 
 // DoRegister does RPC registration
@@ -124,51 +115,25 @@ func (s *Server) ReportHealth() bool {
 
 // Shutdown the server
 func (s *Server) Shutdown(ctx context.Context) error {
-	s.save(ctx)
 	return nil
 }
 
 // Mote promotes/demotes this server
 func (s *Server) Mote(ctx context.Context, master bool) error {
-	if master {
-		err := s.load(ctx)
-		return err
-	}
-
 	return nil
 }
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
-	return []*pbg.State{
-		&pbg.State{Key: "last_run", TimeValue: s.config.LastRun},
-		&pbg.State{Key: "tracking", Text: fmt.Sprintf("%v", s.config.Tracking)},
-	}
+	return []*pbg.State{}
 }
 
 func main() {
-	var quiet = flag.Bool("quiet", false, "Show all output")
-	var init = flag.Bool("init", false, "Prep server")
-	flag.Parse()
-
-	//Turn off logging
-	if *quiet {
-		log.SetFlags(0)
-		log.SetOutput(ioutil.Discard)
-	}
 	server := Init()
 	server.PrepServer()
 	server.Register = server
 	err := server.RegisterServerV2("pullrequester", false, true)
 	if err != nil {
-		return
-	}
-
-	if *init {
-		ctx, cancel := utils.BuildContext("pullrequester", "pullrequester")
-		defer cancel()
-		server.config.LastRun = time.Now().Unix()
-		server.save(ctx)
 		return
 	}
 

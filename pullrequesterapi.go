@@ -53,7 +53,6 @@ func (s *Server) processPullRequest(ctx context.Context, pr *pb.PullRequest) err
 
 func (s *Server) update(ctx context.Context, req, reqIn *pb.PullRequest) (*pb.UpdateResponse, error) {
 	defer s.updatePR(ctx, req)
-	defer s.save(ctx)
 
 	if len(reqIn.Name) > 0 {
 		req.Name = reqIn.Name
@@ -102,20 +101,25 @@ func (s *Server) update(ctx context.Context, req, reqIn *pb.PullRequest) (*pb.Up
 
 // UpdatePullRequest updates the pull request
 func (s *Server) UpdatePullRequest(ctx context.Context, req *pb.UpdateRequest) (*pb.UpdateResponse, error) {
+	config, err := s.load(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer s.save(ctx, config)
 	s.Log(fmt.Sprintf("Update: %v", req))
 	time.Sleep(time.Second * 2)
 	if len(req.Update.Url) > 0 {
-		for _, pr := range s.config.Tracking {
+		for _, pr := range config.Tracking {
 			if pr.Url == req.Update.Url {
 				return s.update(ctx, pr, req.Update)
 			}
 		}
-		s.config.Tracking = append(s.config.Tracking, req.Update)
+		config.Tracking = append(config.Tracking, req.Update)
 		return &pb.UpdateResponse{}, nil
 	}
 
 	if len(req.Update.Shas) > 0 {
-		for _, pr := range s.config.Tracking {
+		for _, pr := range config.Tracking {
 			for _, sha := range pr.Shas {
 				if sha == req.Update.Shas[0] {
 					return s.update(ctx, pr, req.Update)
