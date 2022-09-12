@@ -39,12 +39,12 @@ func (s *Server) processPullRequest(ctx context.Context, pr *pb.PullRequest) err
 			}
 		}
 
-		s.Log(fmt.Sprintf("Ready for Auto Merge %v", pr.Url))
+		s.CtxLog(ctx, fmt.Sprintf("Ready for Auto Merge %v", pr.Url))
 		elems := strings.Split(pr.Url, "/")
 		val, _ := strconv.Atoi(elems[7])
 
 		resp, err := s.github.closePullRequest(ctx, &pbgh.CloseRequest{Job: elems[5], PullNumber: int32(val), Sha: pr.Shas[len(pr.Shas)-1], BranchName: pr.Name})
-		s.Log(fmt.Sprintf("Result %v, %v", resp, err))
+		s.CtxLog(ctx, fmt.Sprintf("Result %v, %v", resp, err))
 		return err
 	}
 
@@ -94,7 +94,7 @@ func (s *Server) update(ctx context.Context, req, reqIn *pb.PullRequest) (*pb.Up
 		}
 	}
 
-	s.Log(fmt.Sprintf("%v", s.processPullRequest(ctx, req)))
+	s.CtxLog(ctx, fmt.Sprintf("%v", s.processPullRequest(ctx, req)))
 
 	return &pb.UpdateResponse{}, nil
 }
@@ -106,7 +106,7 @@ func (s *Server) UpdatePullRequest(ctx context.Context, req *pb.UpdateRequest) (
 		return nil, err
 	}
 	defer s.save(ctx, config)
-	s.Log(fmt.Sprintf("Update: %v", req))
+	s.CtxLog(ctx, fmt.Sprintf("Update: %v", req))
 	time.Sleep(time.Second * 2)
 	if len(req.Update.Url) > 0 {
 		for _, pr := range config.Tracking {
