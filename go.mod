@@ -3,7 +3,7 @@ module github.com/brotherlogic/pullrequester
 go 1.16
 
 require (
-	github.com/brotherlogic/githubcard v0.0.0-20221210201915-2f340042d948
+	github.com/brotherlogic/githubcard v0.0.0-20221211015849-b7a965cc05f2
 	github.com/brotherlogic/goserver v0.0.0-20221202193151-b0b39691c212
 	github.com/brotherlogic/keystore v0.0.0-20221210190215-af3698c6a2c9
 	github.com/golang/protobuf v1.5.2
