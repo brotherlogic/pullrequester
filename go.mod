@@ -3,12 +3,15 @@ module github.com/brotherlogic/pullrequester
 go 1.16
 
 require (
-	github.com/brotherlogic/githubcard v0.0.0-20230101072631-dcc4a0e0d7ed
-	github.com/brotherlogic/goserver v0.0.0-20230106225431-4d4abea9318a
-	github.com/brotherlogic/keystore v0.0.0-20230108052654-392c7a9b9675
-	github.com/brotherlogic/logging v0.0.0-20230108082501-1829ce3e39d8 // indirect
-	github.com/golang/protobuf v1.5.2
-	golang.org/x/net v0.5.0
-	google.golang.org/grpc v1.51.0
-	google.golang.org/protobuf v1.28.1
+	github.com/brotherlogic/buildserver v0.0.0-20230503045705-358d698e08a0 // indirect
+	github.com/brotherlogic/githubcard v0.0.0-20230503005246-90bac98abd6a
+	github.com/brotherlogic/goserver v0.0.0-20230330215506-65bad61eb180
+	github.com/brotherlogic/keystore v0.0.0-20230501001350-d88dcd78f5f5
+	github.com/golang/protobuf v1.5.3
+	github.com/prometheus/client_golang v1.15.1 // indirect
+	github.com/prometheus/client_model v0.4.0 // indirect
+	golang.org/x/net v0.9.0
+	golang.org/x/sys v0.8.0 // indirect
+	google.golang.org/grpc v1.55.0
+	google.golang.org/protobuf v1.30.0
 )
