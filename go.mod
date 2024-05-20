@@ -1,6 +1,6 @@
 module github.com/brotherlogic/pullrequester
 
-go 1.22.2
+go 1.22.1
 
 require (
 	github.com/brotherlogic/githubcard v0.0.0-20240507151718-1e1b9a5bd975
