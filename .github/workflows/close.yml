@@ -3,8 +3,8 @@ name: Close All Pull Requests
 on: 
   pull_request:
     types: [labeled]
-  #schedule:
-  #  - cron: '*/5 * * * *'
+#  schedule:
+#    - cron: '*/5 * * * *'
 
 jobs:
   run:
